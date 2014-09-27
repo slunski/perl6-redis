@@ -85,7 +85,7 @@ for "INCRBYFLOAT HINCRBYFLOAT ZINCRBY ZSCORE".split(" ") -> $c {
 has %!command_callbacks = %command_callbacks;
 
 method new(Str $server?, Str :$encoding?, Bool :$decode_response?) {
-    my %config = {}
+    my %config = %();
     if $server.defined {
         if $server ~~ m/^([\d+]+ %\.) [':' (\d+)]?$/ {
             %config<host> = $0.Str;
@@ -102,7 +102,7 @@ method new(Str $server?, Str :$encoding?, Bool :$decode_response?) {
     if $decode_response.defined {
         %config<decode_response> = $decode_response;
     }
-    my $obj = self.bless(*, |%config);
+    my $obj = self.bless(|%config);
     $obj.reconnect;
     return $obj;
 }
@@ -115,20 +115,20 @@ method reconnect {
     }
 }
 
-multi method encode(Str:D $value) returns Buf {
+multi method encode(Str:D $value) returns Blob {
     return $value.encode(self.encoding);
 }
 
-multi method encode(Buf:D $value) returns Buf {
+multi method encode(Buf:D $value) returns Blob {
     return $value;
 }
 
 # convert to Str, then to Buf
-multi method encode($value) returns Buf {
+multi method encode($value) returns Blob {
     return self.encode($value.Str);
 }
 
-method !pack_command(*@args) returns Buf {
+method !pack_command(*@args) returns Blob {
     my $cmd = self.encode('*' ~ @args.elems ~ "\r\n");
     for @args -> $arg {
         my $new = self.encode($arg);
@@ -189,6 +189,10 @@ method !read_response returns Any {
 method !decode_response($response) {
     if $response.WHAT === Buf {
         return $response.decode(self.encoding);
+    } elsif $response.WHAT === Blob {
+        return $response.decode(self.encoding);
+    } elsif $response.WHAT === Buf[uint8] {
+        return $response.decode(self.encoding);
     } elsif $response.WHAT === Array {
         return $response.map( { self!decode_response($_) } ).Array;
     } elsif $response.WHAT === Hash {
@@ -203,7 +207,7 @@ method !decode_response($response) {
 }
 
 method !parse_response($response is copy, Str $command) {
-    if %!command_callbacks.exists($command) {
+    if %!command_callbacks{$command} :exists {
         $response =  %!command_callbacks{$command}($response);
     }
     if self.decode_response and $command !eq any("DUMP") {
@@ -272,11 +276,12 @@ method del(*@keys) returns Int {
     return self.exec_command("DEL", |@keys);
 }
 
-method dump(Str $key) returns Buf {
+method dump(Str $key) returns Blob {
     return self.exec_command("DUMP", $key);
 }
 
 method exists(Str $key) returns Bool {
+#method exists(Str $key) {
     return self.exec_command("EXISTS", $key);
 }
 
@@ -336,7 +341,7 @@ method renamenx(Str $key, Str $newkey) returns Bool {
     return self.exec_command("RENAMENX", $key, $newkey);
 }
 
-method restore(Str $key, Int $milliseconds, Buf $serialized-value) returns Bool {
+method restore(Str $key, Int $milliseconds, Blob $serialized-value) returns Bool {
     return self.exec_command("RESTORE", $key, $milliseconds, $serialized-value);
 }
 

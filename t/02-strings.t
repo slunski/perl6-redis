@@ -65,7 +65,7 @@ if $r.info<redis_version> gt "2.6" {
 # set & get
 is_deeply $r.set("key", "value"), True;
 is_deeply $r.get("key"), "value";
-is_deeply $r.get("does_not_exists"), Nil;
+is_deeply $r.get("does_not_exists"), Any;
 is_deeply $r.set("key2", 100), True;
 is_deeply $r.get("key2"), "100";
 
@@ -80,7 +80,8 @@ if $r.info<redis_version> gt "2.6" {
     is_deeply $r.psetex("key", 100, "value"), True;
     is_deeply $r.get("key"), "value";
     sleep(0.1);
-    is_deeply $r.get("key"), Nil;
+    #is_deeply $r.get("key"), Nil;
+    is_deeply $r.get("key"), Any;
 }
 
 # setbit

@@ -27,7 +27,7 @@ Install with Panda
 Unit Tests
 ==========
 
-    Tested agaist Redis version 2.4.16 and 2.5.12.
+    Tested agaist Redis version 2.4.16, 2.5.12 and 2.8.13.
 
 Docs
 ====

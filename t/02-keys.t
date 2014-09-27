@@ -40,9 +40,16 @@ if $r.info<redis_version> gt "2.6" {
     is_deeply $r.ttl("key"), -1;
     is_deeply $r.pexpire("key", 100000), True;
     is_deeply $r.expireat("key", 100), True;
-    is_deeply $r.ttl("key"), -1;
-    is_deeply $r.pexpireat("key", 1), False;
-    is_deeply $r.pttl("key"), -1;
+	# in Redis 2.8 "key does not exist" got code -2 
+	if $r.info<redis_version> gt "2.8" {
+        is_deeply $r.ttl("key"), -2;
+        is_deeply $r.pexpireat("key", 1), False;
+        is_deeply $r.pttl("key"), -2;
+    } else {
+        is_deeply $r.ttl("key"), -1;
+        is_deeply $r.pexpireat("key", 1), False;
+        is_deeply $r.pttl("key"), -1;
+	}
 } else {
     is_deeply $r.expire("key", 100), True;
     ok $r.ttl("key") <= 100;
@@ -53,7 +60,7 @@ if $r.info<redis_version> gt "2.6" {
 # keys
 $r.set("pattern1", 1);
 $r.set("pattern2", 2);
-is_deeply $r.keys("pattern*"), ["pattern1", "pattern2"];
+is_deeply $r.keys("pattern*").Set, ["pattern1", "pattern2"].Set;
 
 # migrate TODO
 
@@ -64,7 +71,7 @@ $r.set("key", "value");
 is_deeply $r.object("refcount", "key"), 1;
 
 # randomkey
-is_deeply $r.randomkey().WHAT.gist, "Str()";
+is_deeply $r.randomkey().WHAT.gist, "(Str)";
 
 # rename
 is_deeply $r.rename("key", "newkey"), True;

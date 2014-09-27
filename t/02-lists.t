@@ -16,7 +16,7 @@ plan 16;
 $r.del("mylist");
 is_deeply $r.lpush("mylist", "World", "Hello"), 2;
 is_deeply $r.lindex("mylist", 1), "World";
-is_deeply $r.lindex("mylist", 2), Nil;
+is_deeply $r.lindex("mylist", 2), Any;
 is_deeply $r.llen("mylist"), 2;
 dies_ok { $r.linsert("mylist", "OK", "World", ", "); }
 is_deeply $r.linsert("mylist", "BEFORE", "World", ", "), 3;
